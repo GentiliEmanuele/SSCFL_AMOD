@@ -2,7 +2,12 @@ import gurobipy as gp
 from gurobipy import GRB
 
 
-def init_original_problem(facilities_opening_costs, transportation_costs, capacities, demands):
+def init_original_problem(problem_instance):
+    # unpack the object problem_instance
+    facilities_opening_costs = problem_instance.facilities_opening_costs
+    transportation_costs = problem_instance.transportation_costs
+    capacities = problem_instance.capacities
+    demands = problem_instance.demands
     num_facilities = len(facilities_opening_costs)
     num_customers = len(transportation_costs)
     model = gp.Model('sscfl')
@@ -20,7 +25,12 @@ def init_original_problem(facilities_opening_costs, transportation_costs, capaci
 
 
 # define the first lagrangian relaxation (relaxation of the second constraints)
-def init_first_problem_relaxation(facilities_opening_costs, transportation_costs, capacities, demands, lamb):
+def init_first_problem_relaxation(problem_instance, lamb):
+    # unpack the object problem_instance
+    facilities_opening_costs = problem_instance.facilities_opening_costs
+    transportation_costs = problem_instance.transportation_costs
+    capacities = problem_instance.capacities
+    demands = problem_instance.demands
     # there variables are the number of the two type of decision variables
     num_facilities = len(facilities_opening_costs)
     num_customers = len(transportation_costs)
@@ -39,7 +49,12 @@ def init_first_problem_relaxation(facilities_opening_costs, transportation_costs
 
 
 # define the second relaxation (relaxation of the first constraints)
-def init_second_problem_relaxation(facilities_opening_costs, transportation_costs, capacities, demands, mu):
+def init_second_problem_relaxation(problem_instance, mu):
+    # unpack the object problem instance
+    facilities_opening_costs = problem_instance.facilities_opening_costs
+    transportation_costs = problem_instance.transportation_costs
+    capacities = problem_instance.capacities
+    demands = problem_instance.demands
     num_facilities = len(facilities_opening_costs)
     num_customers = len(transportation_costs)
     model = gp.Model('second_lagrangian_relaxation')
