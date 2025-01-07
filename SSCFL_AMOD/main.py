@@ -1,5 +1,6 @@
 import models as m
 import problem_instance as pi
+import sub_gradient_algorithm as sga
 
 
 # only for test
@@ -8,4 +9,4 @@ if __name__ == '__main__':
                                           [[10, 2, 3, 5], [20, 2, 1, 3]],
                                           [7, 2, 1, 2],
                                           [3, 1])
-
+    sga.sub_gradient_algorithm(problem_instance, [0, 0, 0, 0], [0, 0])
