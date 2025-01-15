@@ -16,4 +16,3 @@ def get_bidimensional_vars_by_name(model, name, num_facilities, prod_customer_fa
         for j in range(prod_customer_facilities):
             variables.append(model.getVarByName(f"{name}[{i},{j}]"))
     return variables
-

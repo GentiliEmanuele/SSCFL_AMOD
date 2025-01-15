@@ -41,9 +41,10 @@ def init_first_problem_relaxation(problem_instance, lamb):
     # add the constraints
     model.addConstrs((gp.quicksum(y[(u, v)] for u in range(num_facilities)) == 1 for v in range(num_customers)),
                      name="first_constraints")
-    model.setObjective(gp.quicksum(facilities_opening_costs[u] +
+    model.setObjective(gp.quicksum(facilities_opening_costs[u] -
                        lamb[u]*capacities[u]*x[u] for u in range(num_facilities)) +
-                       gp.quicksum(transportation_costs[v][u] + lamb[u] * demands[v] for u in range(num_facilities)
+                       gp.quicksum((transportation_costs[v][u] * demands[v] + lamb[u] * demands[v])*y[(u, v)]
+                                   for u in range(num_facilities)
                                    for v in range(num_customers)), sense=GRB.MINIMIZE)
     return model
 
