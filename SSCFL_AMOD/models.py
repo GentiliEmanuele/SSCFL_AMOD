@@ -19,8 +19,8 @@ def init_original_problem(problem_instance):
     model.addConstrs((gp.quicksum(y[(u, v)] * demands[v] for v in range(num_customers)) <= x[u] * capacities[u]
                      for u in range(num_facilities)), name="second_constraints")
     model.setObjective(gp.quicksum(x[u] * facilities_opening_costs[u] for u in range(num_facilities)) +
-                       gp.quicksum(y[(u, v)] * demands[v] * transportation_costs[v][u] for v in range(num_customers)
-                       for u in range(num_facilities)), sense=GRB.MINIMIZE)
+                       gp.quicksum(y[(u, v)] * demands[v] * transportation_costs[v][u] for u in range(num_facilities)
+                       for v in range(num_customers)), sense=GRB.MINIMIZE)
     return model
 
 
