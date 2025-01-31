@@ -1,4 +1,5 @@
 import random
+import models_utils as mu
 
 
 def generator(problem_instance):
@@ -15,9 +16,7 @@ def generator(problem_instance):
                 if (sum(y[u][v] * problem_instance.demands[v] for v in range(problem_instance.num_customers))
                         > x[u] * problem_instance.capacities[u]):
                     y[u][v] = 0
-    return (sum(x[u] * problem_instance.facilities_opening_costs[u] for u in range(problem_instance.num_facilities)) +
-            sum(y[u][v] * problem_instance.transportation_costs[u][v]
-                for u in range(problem_instance.num_facilities) for v in range(problem_instance.num_customers)))
+    return mu.obj_value(problem_instance, x, y)
 
 
 def cond(problem_instance, y):
@@ -27,7 +26,7 @@ def cond(problem_instance, y):
     return True
 
 
-def generate(problem_instance, num_solutions):
+def get_feasible_by_heuristic(problem_instance, num_solutions):
     values = []
     for i in range(num_solutions):
         values.append(generator(problem_instance))
