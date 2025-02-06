@@ -1,7 +1,9 @@
+import os
+
 import problem_instance as pi
 
 
-def parse_file(path):
+def parse_file(path, name):
     line_counter = 0
     opening_costs = []
     transportation_cost = []
@@ -26,4 +28,15 @@ def parse_file(path):
         if num_facilities + 1 < line_counter:
             transportation_cost.append([float(x) for x in line.strip().split(" ")])
         line_counter += 1
-    return pi.ProblemInstance(num_facilities, num_costumers, opening_costs, transportation_cost, capacities, demands)
+    return pi.ProblemInstance(name, num_facilities, num_costumers, opening_costs, transportation_cost, capacities,
+                              demands)
+
+
+def get_all_instances():
+    problem_instances = []
+    for filename in os.listdir("instances"):
+        file_path = os.path.join("instances", filename)
+        if os.path.isfile(file_path):
+            problem_instance = parse_file(file_path, filename)
+            problem_instances.append(problem_instance)
+    return problem_instances

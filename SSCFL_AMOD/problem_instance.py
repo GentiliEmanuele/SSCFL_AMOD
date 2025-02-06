@@ -1,5 +1,7 @@
 class ProblemInstance:
-    def __init__(self, num_facilities, num_customers, facilities_opening_costs, transportation_costs, capacities, demands):
+    def __init__(self, name, num_facilities, num_customers, facilities_opening_costs, transportation_costs, capacities,
+                 demands):
+        self.name = name
         self.num_facilities = num_facilities
         self.num_customers = num_customers
         self.facilities_opening_costs = facilities_opening_costs
