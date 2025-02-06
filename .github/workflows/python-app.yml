@@ -25,4 +25,6 @@ jobs:
         
       
       - name: Run Python script
-        run: python SSCFL_AMOD/main.py
+        run: |
+          cd SSCFL_AMOD
+          python main.py
