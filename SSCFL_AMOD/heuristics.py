@@ -1,9 +1,8 @@
 import models_utils as mu
+import random
 
 
-def initial_add_heuristic(problem_instance):
-    x = [0 for _ in range(problem_instance.num_facilities)]
-    y = [[0 for _ in range(problem_instance.num_customers)] for _ in range(problem_instance.num_facilities)]
+def initial_add_heuristic(problem_instance, x, y):
     # Step 0: start with K = [] and set Z_u = inf
     k = []
     z_u = float("inf")
@@ -117,7 +116,8 @@ def compute_min(problem_instance, i, j, k):
 def compute_minus_on_column(problem_instance, j, div, k):
     res = float("inf")
     for i in k:
-        if problem_instance.transportation_costs[i][j] < res and problem_instance.transportation_costs[i][j] != div:
+        x = problem_instance.transportation_costs[i][j]
+        if x < res and x != div:
             res = problem_instance.transportation_costs[i][j]
     return res
 
@@ -130,3 +130,24 @@ def find_min_index(problem_instance, j, feasible):
             res = problem_instance.transportation_costs[i][j]
             index = i
     return index
+
+
+def find_feasible_first(problem_instance, x, y):
+    for u in range(problem_instance.num_facilities):
+        if (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
+                <= problem_instance.capacities[u]):
+            x[u] = 1
+        else:
+            min_opening_costs(problem_instance, x)
+    return x, y, mu.obj_value(problem_instance, x, y)
+
+
+def min_opening_costs(problem_instance, x):
+    low = float("inf")
+    min_index = -1
+    for u in range(problem_instance.num_facilities):
+        if problem_instance.facilities_opening_costs[u] < low and x[u] == 0:
+            min_index = u
+            low = problem_instance.facilities_opening_costs[u]
+    x[min_index] = 1
+    return min_index

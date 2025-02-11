@@ -57,8 +57,8 @@ def init_second_problem_relaxation(problem_instance, mu):
     transportation_costs = problem_instance.transportation_costs
     capacities = problem_instance.capacities
     demands = problem_instance.demands
-    num_facilities = len(facilities_opening_costs)
-    num_customers = len(transportation_costs)
+    num_facilities = problem_instance.num_facilities
+    num_customers = problem_instance.num_customers
     model = gp.Model('second_lagrangian_relaxation')
     # add the variables to the model
     x = model.addVars(num_facilities, vtype=GRB.BINARY, name='x')

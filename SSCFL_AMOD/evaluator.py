@@ -1,6 +1,9 @@
 import models
 import time
 import solve_lagrangian_relaxation
+import heuristics
+
+import models_utils as mu
 
 
 def get_sol_value(solutions, name):
@@ -17,29 +20,54 @@ def solve_original(problem_instance):
     model.optimize()
     end = time.time()
     obj_val = model.objVal
-    return obj_val, end-start
+    return obj_val, end - start
 
 
-def solve_lagrangian(problem_instance, num_runs, w, eps):
-    start_mult = time.time()
-    lamb = solve_lagrangian_relaxation.solve_lagrangian_relaxation(problem_instance, num_runs, w, eps)
-    end_mult = time.time()
-    model = models.init_first_problem_relaxation(problem_instance, lamb)
-    model.setParam("OutputFlag", 0)
+def solve_lagrangian_first(problem_instance, num_runs, w, eps):
     start = time.time()
-    model.optimize()
+    lamb, obj_val, x, y = solve_lagrangian_relaxation.solve_lagrangian_relaxation_first(problem_instance, num_runs, w,
+                                                                                        eps)
+    x, y, z_u = heuristics.find_feasible_first(problem_instance, x, y)
     end = time.time()
-    obj_val = model.objVal
-    return obj_val, (end-start) + (end_mult-start_mult)
+    if not mu.is_feasible(problem_instance, x, y):
+        exit(1)
+    return obj_val, (end - start), z_u
+
+
+def solve_lagrangian_second(problem_instance, num_runs, w, eps):
+    start = time.time()
+    _mu, obj_val, x, y = solve_lagrangian_relaxation.solve_lagrangian_relaxation_second(problem_instance, num_runs, w,
+                                                                                        eps)
+    x, y, z_u, k = heuristics.initial_add_heuristic(problem_instance, x, y)
+    end = time.time()
+    if not mu.is_feasible(problem_instance, x, y):
+        exit(1)
+    return obj_val, (end - start), z_u
 
 
 def evaluate(instances, solutions, num_runs, w, eps):
-    with open("results/results.csv", "w") as csvfile:
-        csvfile.write("instance_name,original_solution_value,original_execution_time,relaxation_solution_value,"
-                      "relaxation_solution_time,OR_Library_Solution_Value\n")
+    with (open("results/results_first_relaxation.csv", "w") as first,
+          open("results/results_second_relaxation.csv", "w") as second):
+        first.write("instance_name,num_facilities,num_customers,original_solution_value,original_execution_time,"
+                    "first_relaxation_solution_value,"
+                    "first_relaxation_solution_time,first_feasible_solution_value,"
+                    "OR_Library_Solution_Value\n")
+        second.write("instance_name,num_facilities,num_customers,original_solution_value,original_execution_time,"
+                     "second_relaxation_solution_value,"
+                     "second_relaxation_solution_time,second_feasible_solution_value,"
+                     "OR_Library_Solution_Value\n")
         for inst in instances:
-            print(f"Solving for {inst.name}")
-            obj_val, execution_time = solve_original(inst)
-            l_obj_val, l_execution_time = solve_lagrangian(inst, num_runs, w, eps)
             or_lib_sol_val = get_sol_value(solutions, inst.name)
-            csvfile.write(f"{inst.name},{obj_val},{execution_time},{l_obj_val},{l_execution_time},{or_lib_sol_val}\n")
+            print(f"Solving for {inst.name} -> Expected {or_lib_sol_val}")
+            obj_val, execution_time = solve_original(inst)
+            print(f"Original problem has been solved execution_time={execution_time} obj_value={obj_val}")
+            l_obj_val, l_execution_time, feasible_first = solve_lagrangian_first(inst, num_runs, w, eps)
+            print(f"Relaxation has been solved execution_time={l_execution_time} obj_value={l_obj_val} "
+                  f"first_feasible_solution_value={feasible_first}")
+            l2_obj_val, l2_execution_time, feasible_second = solve_lagrangian_second(inst, num_runs, w, eps)
+            print(f"Relaxation has been solved execution_time={l2_execution_time} obj_value={l2_obj_val} "
+                  f"second_feasible_solution_value={feasible_second}")
+            first.write(f"{inst.name},{inst.num_facilities},{inst.num_customers},{obj_val},{execution_time},"
+                        f"{l_obj_val},{l_execution_time}, {feasible_first},{or_lib_sol_val}\n")
+            second.write(f"{inst.name},{inst.num_facilities},{inst.num_customers},{obj_val},{execution_time},"
+                         f"{l2_obj_val},{l2_execution_time},{feasible_second},{or_lib_sol_val}\n")
