@@ -1,5 +1,4 @@
 import models_utils as mu
-import random
 
 
 def initial_add_heuristic(problem_instance, x, y):
@@ -77,8 +76,8 @@ def final_adjustment_heuristic(problem_instance, best_x, best_y, k):
     customers_list = [[j, 0] for j in range(problem_instance.num_customers)]
     for j in range(problem_instance.num_customers):
         if len(k) != 0:
-            first_best = compute_minus_on_column(problem_instance, j, float("inf"))
-            second_best = compute_minus_on_column(problem_instance, j, first_best)
+            first_best = compute_minus_on_column(problem_instance, j, float("inf"), k)
+            second_best = compute_minus_on_column(problem_instance, j, first_best, k)
             customers_list[j][1] = first_best - second_best
     customers_ordered = sorted(customers_list, key=lambda j_elem: j_elem[1], reverse=True)
     for j in customers_ordered:
@@ -98,7 +97,6 @@ def try_another_solution(problem_instance, x, y, j):
         if mu.is_feasible(problem_instance, x, y):
             feasible_value = mu.obj_value(problem_instance, x, y)
             if feasible_value < best_value:
-                best_value = feasible_value
                 find_best_feasible = True
                 break
     return find_best_feasible
@@ -134,11 +132,16 @@ def find_min_index(problem_instance, j, feasible):
 
 def find_feasible_first(problem_instance, x, y):
     for u in range(problem_instance.num_facilities):
-        if (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
-                <= problem_instance.capacities[u]):
+        if x[u] == 0 and (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
+                          <= problem_instance.capacities[u]):
             x[u] = 1
-        else:
-            min_opening_costs(problem_instance, x)
+        elif (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
+              > problem_instance.capacities[u]):
+            u_p = min_opening_costs(problem_instance, x)
+            x[u_p] = 1
+            v = max_transportation_cost(problem_instance, x, y)
+            y[u][v] = 0
+            y[u_p][v] = 1
     return x, y, mu.obj_value(problem_instance, x, y)
 
 
@@ -149,5 +152,14 @@ def min_opening_costs(problem_instance, x):
         if problem_instance.facilities_opening_costs[u] < low and x[u] == 0:
             min_index = u
             low = problem_instance.facilities_opening_costs[u]
-    x[min_index] = 1
     return min_index
+
+
+def max_transportation_cost(problem_instance, y, u):
+    up = 0
+    max_index = -1
+    for v in range(problem_instance.num_customers):
+        if problem_instance.transportation_costs[u][v] > up and y[u][v] == 1:
+            up = problem_instance.transportation_costs[u][v]
+            max_index = v
+    return max_index

@@ -21,9 +21,3 @@ def obj_value(problem_instance, x, y):
     return (sum(x[u] * problem_instance.facilities_opening_costs[u] for u in range(problem_instance.num_facilities)) +
             sum(y[u][v] * problem_instance.transportation_costs[u][v]
                 for u in range(problem_instance.num_facilities) for v in range(problem_instance.num_customers)))
-
-
-def first_feasible_constructor(problem_instance, x, y):
-    for u in range(problem_instance.num_facilities):
-        if sum(y[u][v] for v in range(problem_instance.num_customers)) == 1:
-            x[u] = 1

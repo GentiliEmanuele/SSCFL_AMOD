@@ -1,6 +1,5 @@
 import gurobipy as gp
 from gurobipy import GRB
-from itertools import product
 
 
 def init_original_problem(problem_instance):
