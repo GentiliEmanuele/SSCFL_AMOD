@@ -8,7 +8,6 @@ def solve_lagrangian_relaxation_first(problem_instance, num_executions, w, epsil
     marked_lamb = []
     x = [0 for _ in range(problem_instance.num_facilities)]
     y = [[0 for _ in range(problem_instance.num_customers)] for _ in range(problem_instance.num_facilities)]
-    random.seed = 42
     lamb = [0 for _ in range(problem_instance.num_facilities)]
     best_lamb = lamb.copy()
     residuals_num_runs = num_executions
@@ -24,8 +23,8 @@ def solve_lagrangian_relaxation_first(problem_instance, num_executions, w, epsil
     best_x = get_x(model, problem_instance)
     best_y = get_y(model, problem_instance)
     z_l = model.objVal
-    # if mu.is_feasible(problem_instance, get_x(model, problem_instance), get_y(model, problem_instance)):
-    #    return lamb, z_l
+    if mu.is_feasible(problem_instance, get_x(model, problem_instance), get_y(model, problem_instance)):
+        return lamb, z_l
     while residuals_num_runs >= 0:
         prev_lamb = lamb.copy()
         better_solution_found = False
@@ -60,7 +59,7 @@ def solve_lagrangian_relaxation_first(problem_instance, num_executions, w, epsil
             z_u = curr_relaxed_sol
             # best_x_feasible = get_x(model, problem_instance)
             # best_y_feasible = get_y(model, problem_instance)
-            residuals_num_runs = 0
+            residuals_num_runs = num_executions
             better_solution_found = True
         # Step 2: If (2) has been solved MAX times without providing another feasible solution to (1) go to step 5.
         # Otherwise, continue.
@@ -92,8 +91,7 @@ def solve_lagrangian_relaxation_second(problem_instance, num_executions, w, epsi
     marked_mu = []
     x = [0 for _ in range(problem_instance.num_facilities)]
     y = [[0 for _ in range(problem_instance.num_customers)] for _ in range(problem_instance.num_facilities)]
-    random.seed = 42
-    _mu = [random.random() for _ in range(problem_instance.num_customers)]
+    _mu = [0 for _ in range(problem_instance.num_customers)]
     best_mu = _mu.copy()
     residuals_num_runs = num_executions
     find_feasible = False
@@ -144,7 +142,7 @@ def solve_lagrangian_relaxation_second(problem_instance, num_executions, w, epsi
             z_u = curr_relaxed_sol
             # best_x_feasible = get_x(model, problem_instance)
             # best_y_feasible = get_y(model, problem_instance)
-            residuals_num_runs = 0
+            residuals_num_runs = num_executions
             better_solution_found = True
         # Step 2: If (2) has been solved MAX times without providing another feasible solution to (1) go to step 5.
         # Otherwise, continue.
@@ -200,7 +198,7 @@ def compute_den_second(problem_instance, marked_mu, y):
         if j not in marked_mu:
             for i in range(problem_instance.num_facilities):
                 total += y[i][j]
-            global_total += total ** 2
+            global_total += (1 - total) ** 2
     return global_total
 
 
@@ -213,7 +211,6 @@ def update_multipliers_first(problem_instance, lamb, marked_lamb, w, z_u, z_l, y
 
 
 def update_multipliers_second(problem_instance, _mu, marked_mu, w, z_u, z_l, y, v):
-    num = w * (z_u - z_l) * (sum(y[u][v] for u in range(problem_instance.num_facilities)))
+    num = w * (z_u - z_l) * (1 - sum(y[u][v] for u in range(problem_instance.num_facilities)))
     den = compute_den_second(problem_instance, marked_mu, y)
-    if den != 0:
-        _mu[v] = max(_mu[v] + num / den, 0)
+    _mu[v] = max(_mu[v] + num / den, 0)

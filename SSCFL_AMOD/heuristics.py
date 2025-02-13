@@ -131,18 +131,52 @@ def find_min_index(problem_instance, j, feasible):
 
 
 def find_feasible_first(problem_instance, x, y):
+    migrate = []
     for u in range(problem_instance.num_facilities):
-        if x[u] == 0 and (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
-                          <= problem_instance.capacities[u]):
+        # if the facilities is closed but there are customers assigned open the facilities
+        if x[u] == 0 and sum(y[u][j] for j in range(problem_instance.num_customers)) > 0:
             x[u] = 1
-        elif (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers))
-              > problem_instance.capacities[u]):
-            u_p = min_opening_costs(problem_instance, x)
-            x[u_p] = 1
-            v = max_transportation_cost(problem_instance, x, y)
-            y[u][v] = 0
-            y[u_p][v] = 1
-    return x, y, mu.obj_value(problem_instance, x, y)
+            # check if the assignment respect the capacity
+            while (sum(y[u][j] * problem_instance.demands[j] for j in range(problem_instance.num_customers)) >
+                   problem_instance.capacities[u]):
+                v_p = max_transportation_cost(problem_instance, x, y)
+                migrate.append([v_p])
+                y[v_p] = 0
+    if len(migrate) != 0:
+        for u in range(problem_instance.num_facilities):
+            for v in migrate:
+                u_p = min_transportation_cost(problem_instance, v, x, y)
+                if u_p == -1:
+                    u_p = min_opening_costs(problem_instance, x)
+                    x[u] = 1
+                    y[u_p][v] = 1
+    for u in range(problem_instance.num_facilities):
+        if sum(y[u][v] for v in range(problem_instance.num_customers)) == 0:
+            x[u] = 0
+
+
+def find_feasible_second(problem_instance, x, y):
+    removed = []
+    for u in range(problem_instance.num_facilities):
+        if sum(y[u][v] for v in range(problem_instance.num_customers)) >= 1:
+            x[u] = 1
+    for v in range(problem_instance.num_customers):
+        if sum(y[i][v] for i in range(problem_instance.num_facilities)) == 0:
+            removed.append(v)
+        while sum(y[i][v] for i in range(problem_instance.num_facilities)) > 1:
+            for u in range(problem_instance.num_facilities):
+                v_p = max_transportation_cost(problem_instance, y, u)
+                y[u][v_p] = 0
+                removed.append(v_p)
+    for v in removed:
+        while sum(y[u][v] for u in range(problem_instance.num_facilities)) < 1:
+            u_p = min_transportation_cost(problem_instance, v, x, y)
+            if u_p == -1:
+                u_p = min_opening_costs(problem_instance, x)
+                x[u_p] = 1
+                y[u_p][v] = 1
+            else:
+                y[u_p][v] = 1
 
 
 def min_opening_costs(problem_instance, x):
@@ -163,3 +197,13 @@ def max_transportation_cost(problem_instance, y, u):
             up = problem_instance.transportation_costs[u][v]
             max_index = v
     return max_index
+
+
+def min_transportation_cost(problem_instance, v, x, y):
+    low = float("inf")
+    min_index = -1
+    for u in range(problem_instance.num_facilities):
+        if x[u] == 1 and problem_instance.transportation_costs[u][v] < low and sum(problem_instance.demands[j] * y[u][j] for j in range(problem_instance.num_customers)) + problem_instance.demands[v] <= problem_instance.capacities[u]:
+            min_index = u
+            low = problem_instance.transportation_costs[u][v]
+    return min_index
