@@ -1,7 +1,6 @@
 import models as m
 import models_utils as mu
 import heuristics as h
-import random
 
 
 def solve_lagrangian_relaxation_first(problem_instance, num_executions, w, epsilon):
