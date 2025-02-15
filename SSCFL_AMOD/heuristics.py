@@ -164,10 +164,9 @@ def find_feasible_second(problem_instance, x, y):
         if sum(y[i][v] for i in range(problem_instance.num_facilities)) == 0:
             removed.append(v)
         while sum(y[i][v] for i in range(problem_instance.num_facilities)) > 1:
-            for u in range(problem_instance.num_facilities):
-                v_p = max_transportation_cost(problem_instance, y, u)
-                y[u][v_p] = 0
-                removed.append(v_p)
+            u_p = max_transportation_cost_on_column(problem_instance, y, v)
+            y[u_p][v] = 0
+            removed.append(v)
     for v in removed:
         while sum(y[u][v] for u in range(problem_instance.num_facilities)) < 1:
             u_p = min_transportation_cost(problem_instance, v, x, y)
@@ -187,6 +186,16 @@ def min_opening_costs(problem_instance, x):
             min_index = u
             low = problem_instance.facilities_opening_costs[u]
     return min_index
+
+
+def max_transportation_cost_on_column(problem_instance, y, v):
+    up = 0
+    max_index = -1
+    for u in range(problem_instance.num_facilities):
+        if problem_instance.transportation_costs[u][v] > up and y[u][v] == 1:
+            up = problem_instance.transportation_costs[u][v]
+            max_index = u
+    return max_index
 
 
 def max_transportation_cost(problem_instance, y, u):
